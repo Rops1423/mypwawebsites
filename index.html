@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Keeper</title>
+
+
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+<link rel="manifest" href="manifest.json" />
+
+<meta name="theme-color" content="#222222">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    margin:0;
+    background:#222;
+    color:white;
+}
+
+.topBar{
+    padding:12px;
+    text-align:center;
+    background:#111;
+}
+
+.topBar button{
+    padding:14px 24px;
+    font-size:1.1rem;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.container{
+    display:flex;
+    height:calc(100vh - 70px);
+}
+
+.team{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:15px;
+}
+
+.blue{
+    background:#1976d2;
+}
+
+.red{
+    background:#c62828;
+}
+
+.teamName{
+    font-size:2rem;
+    font-weight:bold;
+    border:none;
+    background:transparent;
+    color:white;
+    text-align:center;
+    width:90%;
+    outline:none;
+}
+
+.score{
+    font-size:5rem;
+    font-weight:bold;
+    margin:20px 0;
+    transition:.25s;
+}
+
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    width:100%;
+    max-width:230px;
+}
+
+button{
+    font-size:1.5rem;
+    padding:16px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.15s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+button:active{
+    transform:scale(.92);
+}
+
+.reset{
+    margin-top:18px;
+    width:100%;
+    max-width:230px;
+}
+
+/* Animations */
+
+.pop{
+    animation:pop .25s;
+}
+
+@keyframes pop{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.35);}
+    100%{transform:scale(1);}
+}
+
+.greenFlash{
+    animation:greenFlash .35s;
+}
+
+.redFlash{
+    animation:redFlash .35s;
+}
+
+@keyframes greenFlash{
+    0%{color:#00ff99;}
+    100%{color:white;}
+}
+
+@keyframes redFlash{
+    0%{color:#ff8080;}
+    100%{color:white;}
+}
+
+@media(max-width:650px){
+
+.teamName{
+    font-size:1.5rem;
+}
+
+.score{
+    font-size:4rem;
+}
+
+button{
+    font-size:1.2rem;
+}
+}
+</style>
+</head>
+
+<body>
+
+
+
+<div class="container">
+
+<div class="team blue">
+
+<input
+id="blueName"
+class="teamName"
+value="Blue"
+oninput="save()">
+
+<div id="blueScore" class="score">0</div>
+
+<div class="buttons">
+<button onclick="changeScore('blue',1)">+1</button>
+<button onclick="changeScore('blue',-1)">-1</button>
+<button onclick="changeScore('blue',2)">+2</button>
+<button onclick="changeScore('blue',-2)">-2</button>
+<button onclick="changeScore('blue',3)">+3</button>
+<button onclick="changeScore('blue',-3)">-3</button>
+</div>
+
+<button class="reset" onclick="resetScore('blue')">Reset</button>
+
+</div>
+
+<div class="team red">
+
+<input
+id="redName"
+class="teamName"
+value="Red"
+oninput="save()">
+
+<div id="redScore" class="score">0</div>
+
+<div class="buttons">
+<button onclick="changeScore('red',1)">+1</button>
+<button onclick="changeScore('red',-1)">-1</button>
+<button onclick="changeScore('red',2)">+2</button>
+<button onclick="changeScore('red',-2)">-2</button>
+<button onclick="changeScore('red',3)">+3</button>
+<button onclick="changeScore('red',-3)">-3</button>
+</div>
+
+<button class="reset" onclick="resetScore('red')">Reset</button>
+
+</div>
+
+</div>
+
+<div class="topBar">
+    <button onclick="resetBoth()">Reset Both</button>
+</div>
+
+<script>
+
+let scores={
+    blue:0,
+    red:0
+};
+
+function animateScore(team,increase){
+
+    const score=document.getElementById(team+"Score");
+
+    score.classList.remove("pop","greenFlash","redFlash");
+
+    void score.offsetWidth;
+
+    score.classList.add("pop");
+    score.classList.add(increase?"greenFlash":"redFlash");
+
+}
+
+function update(team){
+
+    document.getElementById(team+"Score").textContent=scores[team];
+    save();
+
+}
+
+function changeScore(team,amount){
+
+    scores[team]+=amount;
+
+    animateScore(team,amount>0);
+
+    update(team);
+
+}
+
+function resetScore(team){
+
+    scores[team]=0;
+
+    animateScore(team,true);
+
+    update(team);
+
+}
+
+function resetBoth(){
+
+    scores.blue=0;
+    scores.red=0;
+
+    animateScore("blue",true);
+    animateScore("red",true);
+
+    update("blue");
+    update("red");
+
+}
+
+function save(){
+
+    localStorage.setItem("scoreData",JSON.stringify({
+        scores:scores,
+        blueName:document.getElementById("blueName").value,
+        redName:document.getElementById("redName").value
+    }));
+
+}
+
+function load(){
+
+    const data=JSON.parse(localStorage.getItem("scoreData"));
+
+    if(!data) return;
+
+    scores=data.scores || scores;
+
+    document.getElementById("blueScore").textContent=scores.blue;
+    document.getElementById("redScore").textContent=scores.red;
+
+    if(data.blueName)
+        document.getElementById("blueName").value=data.blueName;
+
+    if(data.redName)
+        document.getElementById("redName").value=data.redName;
+
+}
+
+load();
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
